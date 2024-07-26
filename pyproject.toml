@@ -1,0 +1,14 @@
+[project]
+name = "comfyui-colornodes"
+description = "Basic Color Nodes for ComfyUI"
+version = "1.0.0"
+license = {file = "LICENSE"}
+
+[project.urls]
+Repository = "https://github.com/akierson/comfyui-colornodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "comfyui-colornodes"
+Icon = ""
