@@ -211,7 +211,10 @@ class ImageReplaceColor:
 
         return result_image
 
+# TODO: 
 # color swatches
+# Color to mask
+# image select color
 
 NODE_CLASS_MAPPINGS = {
     "Color Picker": ColorPicker,
