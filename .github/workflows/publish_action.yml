@@ -8,17 +8,42 @@ on:
     paths:
       - "pyproject.toml"
 
+# contents: write lets the tag step push v<version> (ADR 0023)
+permissions:
+  contents: write
+
 jobs:
   publish-node:
     name: Publish Custom Node to registry
     runs-on: ubuntu-latest
     # if this is a forked repository. Skipping the workflow.
-    if: github.event.repository.fork == false 
+    if: github.event.repository.fork == false
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+      - name: Skip if this version is already released
+        id: guard
+        run: |
+          VERSION=$(python3 -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "Tag v$VERSION already exists; skipping publish."
+            echo "released=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Publish Custom Node
+        if: steps.guard.outputs.released == 'false'
         uses: Comfy-Org/publish-node-action@main
         with:
           ## Add your own personal access token to your Github Repository secrets and reference it here.
           personal_access_token: ${{ secrets.REGISTRY_ACCESS_TOKEN }}
+      - name: Tag the published commit
+        if: steps.guard.outputs.released == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ steps.guard.outputs.version }}" -m "Release v${{ steps.guard.outputs.version }}"
+          git push origin "v${{ steps.guard.outputs.version }}"
